@@ -1,0 +1,25 @@
+ 
+
+ Students View
+
+ Remove Fees Section
+
+ Add :- add semester details
+        student analysis
+        highest ranker
+
+
+
+
+Teachers View
+Remove: Salary  
+
+Edit Attendence Section: semester instead of classname
+                        footer section is too big
+
+
+
+Admin View
+Remove: Teacher salary
+        Student's Fees
+        fees from navigation

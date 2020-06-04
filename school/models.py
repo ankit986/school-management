@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 
 class TeacherExtra(models.Model):
     user=models.OneToOneField(User,on_delete=models.CASCADE)
-    salary = models.PositiveIntegerField(null=False)
+    salary = models.PositiveIntegerField(null=True)
     joindate=models.DateField(auto_now_add=True)
     mobile = models.CharField(max_length=40)
     status=models.BooleanField(default=False)
@@ -22,12 +22,11 @@ class TeacherExtra(models.Model):
 
 
 classes=[('one','one'),('two','two'),('three','three'),
-('four','four'),('five','five'),('six','six'),('seven','seven'),('eight','eight'),('nine','nine'),('ten','ten')]
+('four','four'),('five','five'),('six','six'),('seven','seven'),('eight','eight')]
 class StudentExtra(models.Model):
     user=models.OneToOneField(User,on_delete=models.CASCADE)
     roll = models.CharField(max_length=10)
     mobile = models.CharField(max_length=40,null=True)
-    fee=models.PositiveIntegerField(null=True)
     cl= models.CharField(max_length=10,choices=classes,default='one')
     status=models.BooleanField(default=False)
     @property

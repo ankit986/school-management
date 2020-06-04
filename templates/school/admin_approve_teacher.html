@@ -48,7 +48,6 @@
           <tr>
             <th>Name</th>
             <th>Mobile</th>
-            <th>Salary</th>
             <th>Joining Date</th>
             <th>Approve</th>
             <th>Delete</th>
@@ -58,7 +57,6 @@
         <tr>
           <td> {{t.get_name}}</td>
           <td>{{t.mobile}}</td>
-          <td>{{t.salary}}</td>
           <td>{{t.joindate}}</td>
           <td><a class="btn btn-primary btn-xs" href="{% url 'approve-teacher' t.id  %}"><span class="glyphicon glyphicon-ok"></span></a></td>
           <td><a class="btn btn-danger btn-xs" href="{% url 'delete-teacher' t.id  %}"><span class="glyphicon glyphicon-trash"></span></a></td>

@@ -73,6 +73,10 @@ urlpatterns = [
 
     path('student-dashboard', views.student_dashboard_view,name='student-dashboard'),
     path('student-attendance', views.student_attendance_view,name='student-attendance'),
+    path('student-academic-add-result', views.student_academics_add_result,name='student-academic-add-result'),
+    
+    # can be removed in future as I am not sure
+    path('student_academic_add_result_table', views.student_academics_add_result,name='student-academic-add-result-table'),
 
 
 

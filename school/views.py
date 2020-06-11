@@ -1,4 +1,4 @@
-from django.shortcuts import render,redirect,reverse
+from django.shortcuts import render,redirect,reverse, HttpResponse
 from . import forms,models
 from django.db.models import Sum
 from django.contrib.auth.models import Group
@@ -610,12 +610,45 @@ def student_attendance_view(request):
 
 
 
+@login_required(login_url='studentlogin')
+@user_passes_test(is_student)
+def student_academics_add_result(request):
+    # Subjects = []
+    # semester = None
+    
+    form = forms.SelectSemester()
+    if(request.method == "POST"):
+
+        studentdata=models.StudentExtra.objects.all().filter(status=True,user_id=request.user.id)
+        roll = studentdata[0].roll
+        Subjects = models.Subject.objects.all().filter(semester = 7) 
+
+        marks_list = request.POST.getlist('marks')
+        gp_list = request.POST.getlist('gp')
+        i = 0
+        for subject in Subjects:
+            print('roll =', roll, 'subject_code =', subject.subject_code, 'obtained_marks =', marks_list[i], 'obtained_gp =', gp_list[i])
+            academics = models.Academics(roll = roll, subject_code = subject.subject_code, obtained_marks = marks_list[i], obtained_gp = gp_list[i])
+            i += 1
+            academics.save()
+
+    Subjects = models.Subject.objects.all().filter(semester = 7) 
+
+
+    context={
+        
+        "subjects":Subjects
+    } 
+    print("CONTEXT ", context)
+    return render(request,'school/student_academics_add_result.html',context)
+   
 
 
 
 
 
-# for aboutus and contact us
+
+# for about us and contact us
 def aboutus_view(request):
     return render(request,'school/aboutus.html')
 
@@ -630,3 +663,66 @@ def contactus_view(request):
             send_mail(str(name)+' || '+str(email),message, EMAIL_HOST_USER, ['wapka1503@gmail.com'], fail_silently = False)
             return render(request, 'school/contactussuccess.html')
     return render(request, 'school/contactus.html', {'form':sub})
+
+
+
+
+
+
+
+
+
+
+
+
+ # return HttpResponse( "contact  Page")
+    
+# to be deleted as i am not sure
+# def student_academic_add_result_table(request, url, Subjects):
+#     studentdata=models.StudentExtra.objects.all().filter(status=True,user_id=request.user.id)
+#     roll = studentdata[0].roll
+#     print("Subjects", Subjects)
+#     print('REQUEST',request )
+#     print("INSIDE ELSE")
+
+#     if(request.method == "POST"):
+#         marks_list = request.POST.getlist('marks')
+#         gp_list = request.POST.getlist('gp')
+#         i = 0
+#         for subject in Subjects:
+#             print('roll =', roll, 'subject_code =', subject.subject_code, 'obtained_marks =', marks_list[i], 'obtained_gp =', gp_list[i])
+#             academics = models.Academics(roll = roll, subject_code = subject.subject_code, obtained_marks = marks_list[i], obtained_gp = gp_list[i])
+#             i += 1
+#             academics.save()
+
+#     # print('semestereee', semester)
+#     context={
+#         "sem":[1,2,3,4,5,6,7,8],
+#         "pr":pr,
+#         "subjects":Subjects,
+#     } 
+#     return render(request,url,context)
+
+
+
+
+# ADD AT LINE 645
+        # if(request.POST['semester']):
+        #     print("INSIDE IF")
+        #     form = form(request.POST)
+        #     print('after form', form)
+        #     semester = request.POST['semester']
+        #     print('semester',semester)
+        
+        #     Subjects = models.Subject.objects.all().filter(semester = semester) 
+            
+        #     context={
+        #         "sem":[1,2,3,4,5,6,7,8],
+        #         "pr":pr,
+        #         "subjects":Subjects,
+        #         "form": form
+        #     } 
+        #     print(' CONTEXT ',context)
+        #     getRequest = request.method
+        #     student_academic_add_result_table(request,'school/student_academics_add_result.html',Subjects )
+        #     # return render(request,'school/student_academics_add_result.html',context)

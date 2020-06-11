@@ -14,25 +14,22 @@ class StudentUserForm(forms.ModelForm):
     class Meta:
         model=User
         fields=['first_name','last_name','username','password']
+
 class StudentExtraForm(forms.ModelForm):
     class Meta:
         model=models.StudentExtra
         fields=['roll','cl','mobile','status']
-
-
 
 #for teacher related form
 class TeacherUserForm(forms.ModelForm):
     class Meta:
         model=User
         fields=['first_name','last_name','username','password']
+    
 class TeacherExtraForm(forms.ModelForm):
     class Meta:
         model=models.TeacherExtra
         fields=['salary','mobile','status']
-
-
-
 
 #for Attendance related form
 presence_choices=(('Present','Present'),('Absent','Absent'))
@@ -59,3 +56,12 @@ class ContactusForm(forms.Form):
     Name = forms.CharField(max_length=30)
     Email = forms.EmailField()
     Message = forms.CharField(max_length=500,widget=forms.Textarea(attrs={'rows': 3, 'cols': 30}))
+
+CATEGORIES = (  
+    ('one', '1'),
+    ('two', '2'),
+    ('three', '3'),
+    ('four ', '4'),
+)
+class SelectSemester(forms.Form):
+    semester = forms.ChoiceField(choices=CATEGORIES, required=False)

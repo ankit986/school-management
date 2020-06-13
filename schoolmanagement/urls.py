@@ -74,13 +74,18 @@ urlpatterns = [
     path('student-dashboard', views.student_dashboard_view,name='student-dashboard'),
     path('student-attendance', views.student_attendance_view,name='student-attendance'),
     path('student-academic-add-result', views.student_academics_add_result,name='student-academic-add-result'),
+    path('student-academics-analysis', views.student_academics_analysis,name='student-academics-analysis'),
+    path('marks-vs-subject-graph', views.student_marks_vs_subject_graph,name='marks-vs-subject-graph'),
+    path('marks-vs-semester-graph', views.student_marks_vs_semester_graph,name='marks-vs-semester-graph'),
+    path('cpi-spi', views.student_cpi_spi,name='cpi-spi'),
     
     # can be removed in future as I am not sure
-    path('student_academic_add_result_table', views.student_academics_add_result,name='student-academic-add-result-table'),
+    # path('student_academic_add_result_table', views.student_academics_add_result,name='student-academic-add-result-table'),
 
 
 
 
     path('aboutus', views.aboutus_view),
+    path('about-developers', views.about_developers_view),
     path('contactus', views.contactus_view),
 ]

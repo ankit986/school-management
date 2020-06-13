@@ -4,6 +4,8 @@ from django.db.models import Sum
 from django.contrib.auth.models import Group
 from django.http import HttpResponseRedirect
 from django.contrib.auth.decorators import login_required,user_passes_test
+from plotly.offline import plot
+from plotly.graph_objs import Scatter, Layout
 
 def home_view(request):
     if request.user.is_authenticated:
@@ -609,30 +611,29 @@ def student_attendance_view(request):
 
 
 
-
-@login_required(login_url='studentlogin')
-@user_passes_test(is_student)
 def student_academics_add_result(request):
     # Subjects = []
     # semester = None
-    
+    semester = 2
     form = forms.SelectSemester()
     if(request.method == "POST"):
 
         studentdata=models.StudentExtra.objects.all().filter(status=True,user_id=request.user.id)
         roll = studentdata[0].roll
-        Subjects = models.Subject.objects.all().filter(semester = 7) 
+        Subjects = models.Subject.objects.all().filter(semester = semester) 
 
         marks_list = request.POST.getlist('marks')
+        print('ml', marks_list)
         gp_list = request.POST.getlist('gp')
         i = 0
         for subject in Subjects:
             print('roll =', roll, 'subject_code =', subject.subject_code, 'obtained_marks =', marks_list[i], 'obtained_gp =', gp_list[i])
             academics = models.Academics(roll = roll, subject_code = subject.subject_code, obtained_marks = marks_list[i], obtained_gp = gp_list[i])
             i += 1
+
             academics.save()
 
-    Subjects = models.Subject.objects.all().filter(semester = 7) 
+    Subjects = models.Subject.objects.all().filter(semester = semester) 
 
 
     context={
@@ -644,6 +645,249 @@ def student_academics_add_result(request):
    
 
 
+@login_required(login_url='studentlogin')
+@user_passes_test(is_student)
+def student_academics_analysis(request):
+
+    return render(request, "school/student_academics_analysis.html")
+
+
+@login_required(login_url='studentlogin')
+@user_passes_test(is_student)
+def student_marks_vs_subject_graph(request):
+
+    studentdata=models.StudentExtra.objects.all().filter(status=True,user_id=request.user.id)
+    roll = studentdata[0].roll
+
+    # FROM HELPER FUNCTION BELOW
+    semester_wise_details = get_student_data_sem_wise(roll)
+
+
+    subject_names = semester_wise_details['subject_names']
+    subject_codes = semester_wise_details['subject_codes']
+    student_marks = semester_wise_details['student_marks']
+    print(subject_names)
+    print(subject_codes)
+    x_data = subject_names
+    y_data = student_marks
+    plot_div = plot(
+        dict(
+            data = [ Scatter(x=x_data, y=y_data,
+                        mode='lines+markers+text', name='marks_vs_subject',
+                        opacity=0.9, marker_color='green')],
+            layout = Layout(
+                    title='<b>Marks Vs Subject</b>',
+                    xaxis=dict(
+                            title="<b>Subjects</b>",
+                            linecolor = "black",
+                            linewidth = 0.5,
+                            mirror = True),
+                    yaxis=dict(
+                        title="<b>Obtained Marks</b>",
+                        linecolor = "black",
+                        linewidth = 0.5,
+                        mirror = True),
+                     
+                    )
+             ),  
+        output_type='div')
+    return render(request, "school/student_marks_vs_subject_graph.html", context={'plot_div': plot_div})
+
+
+
+@login_required(login_url='studentlogin')
+@user_passes_test(is_student)
+def student_marks_vs_semester_graph(request):
+
+    studentdata=models.StudentExtra.objects.all().filter(status=True,user_id=request.user.id)
+    roll = studentdata[0].roll
+    semester_wise_details = get_student_data_sem_wise(roll)
+
+    sem_marks_obtained_dict = semester_wise_details['sem_marks_obtained_dict']
+    sem_marks_total_dict = semester_wise_details['sem_marks_total_dict']
+    semesters_name = list(sem_marks_obtained_dict.keys())
+
+    sum_obtained_marks_list = []
+    sum_total_marks_dict = {}
+    sum_obtained_marks_dict = {}
+    sum_total_marks_list = []
+
+    for val in sem_marks_obtained_dict: 
+        print('')
+        print('VAL', val)
+        sum_m = 0
+
+        for mark in sem_marks_obtained_dict[val]: 
+            sum_m += int(mark) 
+        print('SUM',sum_m)
+        print('')
+        sum_obtained_marks_dict[val] = sum_m
+        sum_obtained_marks_list.append(sum_m) 
+
+    for val in sem_marks_total_dict: 
+        sum_m = 0
+
+        for mark in sem_marks_total_dict[val]: 
+            sum_m +=int(mark) 
+        sum_total_marks_dict[val] = sum_m
+        sum_total_marks_list.append(sum_m) 
+  
+
+    i=0
+    sem_total_obtained_dict = {}
+    for sem in semesters_name:
+        val = []
+        val.append(sum_obtained_marks_list[i])
+        val.append(sum_total_marks_list[i])
+        percent = sum_obtained_marks_list[i]/sum_total_marks_list[i]*100
+        val.append(round(percent,2))
+        i += 1
+        sem_total_obtained_dict[sem] = val
+ 
+
+    x_data = semesters_name
+    y1_data = sum_obtained_marks_list
+    y2_data = sum_total_marks_list
+    plot_div = plot(
+        dict(
+            data = [ Scatter(x=x_data, y=y1_data,
+                          mode='lines+markers+text', name='obtained marks',
+                        opacity=1, marker_color='green'),
+                     Scatter(x=x_data, y=y2_data,
+                          mode='lines+markers+text', name='total marks',
+                        opacity=0.6, marker_color='orange')],
+            layout = Layout(
+                    
+                    title='<b>Total Marks in Each Semester</b>',
+                    xaxis=dict(
+                        title="<b>Semester</b>",
+                        tickmode = 'linear',
+                        dtick = 1,
+                        range=[1,8],
+                        linecolor = "black",
+                        linewidth = 0.5,
+                        mirror = True),
+                    yaxis=dict(
+                        title="<b>Total Marks</b>", 
+                        linecolor = "black",
+                        linewidth = 0.5,
+                        mirror = True),
+                     
+                    )
+             ),  
+        output_type='div')
+
+    context={
+        "sem_total_obtained_dict": sem_total_obtained_dict,
+        "plot_div":plot_div
+    }
+    return render(request, "school/student_marks_vs_semester_graph.html", context)
+
+
+@login_required(login_url='studentlogin')
+@user_passes_test(is_student)
+def student_cpi_spi(request):
+
+    studentdata=models.StudentExtra.objects.all().filter(status=True,user_id=request.user.id)
+    roll = studentdata[0].roll
+    semester_wise_details = get_student_data_sem_wise(roll)
+
+    sem_gp_dict = semester_wise_details['sem_gp_dict']
+    sem_credit_dict = semester_wise_details['sem_credit_dict']
+    semesters = semester_wise_details['semesters']
+    sem_marks_obtained_dict = semester_wise_details['sem_marks_obtained_dict']
+
+    semesters_name = list(sem_marks_obtained_dict.keys())
+    sum_marks = 0
+    sum_array = []
+    for val in sem_marks_obtained_dict: 
+        for mark in sem_marks_obtained_dict[val]: 
+            sum_marks +=int(mark) 
+        sum_array.append(sum) 
+    
+    marks_sum = sum_array
+
+    sem_wise_n = {}
+    sem_wise_d = {}
+    sem_wise_spi = {}
+    sem_wise_cpi = {}
+    sem_wise_cpi_spi = {}
+    total_n = 0
+    total_d = 0
+    for sem in sem_gp_dict:
+        gps = sem_gp_dict[sem]
+        gps = list(map(int, gps))
+        credits = sem_credit_dict[sem]
+        credits = list(map(int, credits))
+        n = [a*b for a,b in zip(gps,credits)]
+        d = sum(credits)
+        sem_wise_d[sem] = d
+        sem_wise_n[sem] = sum(n)
+        spi = sum(n)/d
+        spi = round(spi, 2)
+        total_n = total_n+sum(n)
+        total_d = total_d+d
+        cpi = total_n/total_d
+        cpi = round(cpi,2)
+        sem_wise_spi[int(sem)] = spi
+        sem_wise_cpi[int(sem)] = total_n/total_d
+        sem_wise_cpi_spi[int(sem)] = [spi, cpi]
+
+    
+
+    x_data = list(sem_wise_cpi_spi.keys())
+    y1_data = list(sem_wise_cpi.values())
+    y2_data = list(sem_wise_spi.values())
+    
+    plot_div = plot(
+        dict(
+            data = [ Scatter(x=x_data, y=y1_data,
+                          mode='lines+markers+text', name='cpi',
+                        opacity=0.9, marker_color='green'),
+                    Scatter(x=x_data, y=y2_data,
+                      mode='lines+markers+text', name='spi',
+                    opacity=0.9, marker_color='orange')],
+            layout = Layout(
+                    
+                    title='<b>CPI V/S SPI</b>',
+                    xaxis=dict(
+                        title="<b>Semester</b>",
+                        tickmode = 'linear',
+                        dtick = 1,
+                        range=[1,8],
+                        linecolor = "black",
+                        linewidth = 0.5,
+                        mirror = True),
+                        
+                    yaxis=dict(
+                        title="<b>Points</b>",
+                        dtick = 0.5,
+                        linecolor = "black",
+                        linewidth = 0.5,
+                        mirror = True
+                      ),
+                     
+                    )
+             ),  
+        output_type='div')
+
+    print('x_data', x_data)
+    print('y1_data', y1_data)
+    print('y2_data', y2_data)
+    
+    print('sem_wise_n', sem_wise_n)
+    print('sem_wise_d', sem_wise_d)
+    print('sem_wise_spi', sem_wise_spi)
+    print('sem_wise_cpi', sem_wise_cpi)
+    print('sem_wise_cpi_spi', sem_wise_cpi_spi)
+    print('total_d', total_d)
+    print('total_n', total_n)
+
+    context = {
+        "sem_wise_cpi_spi": sem_wise_cpi_spi,
+        'plot_div': plot_div 
+    }
+    return render(request, "school/student_cpi_spi.html",context)
 
 
 
@@ -651,6 +895,9 @@ def student_academics_add_result(request):
 # for about us and contact us
 def aboutus_view(request):
     return render(request,'school/aboutus.html')
+
+def about_developers_view(request): 
+    return render(request,'school/about_developers_view.html')
 
 def contactus_view(request):
     sub = forms.ContactusForm()
@@ -667,8 +914,95 @@ def contactus_view(request):
 
 
 
+#helper fcuntion
 
+def get_student_data_sem_wise(roll):
+    academic_details = models.Academics.objects.all().filter(roll = roll)
 
+    student_marks = []
+    student_gps = []
+    subject_credits = []
+    subject_codes = []
+    subject_names = []
+    subject_total_marks = []
+    semesters = []
+
+    # FROM ACADEMIC DETAILS MODEL
+    for academic_detail in academic_details:
+        student_marks.append(academic_detail.obtained_marks)
+        student_gps.append(academic_detail.obtained_gp)
+        subject_codes.append(academic_detail.subject_code)
+
+    # FROM SUBJECT MODEL
+    for code in subject_codes:
+        subject_names.append(models.Subject.objects.get(subject_code = code).subject_name)
+        semesters.append(models.Subject.objects.get(subject_code = code).semester)
+        subject_credits.append(models.Subject.objects.get(subject_code = code).total_credits)
+        subject_total_marks.append(models.Subject.objects.get(subject_code = code).subject_total_marks)
+
+    sem_marks_obtained_dict = {}
+    i = 0
+    for s in semesters: 
+        if s not in sem_marks_obtained_dict: 
+            sem_marks_obtained_dict[s] = [] 
+        sem_marks_obtained_dict[s].append(student_marks[i]) 
+        i += 1 
+
+    sem_marks_total_dict = {}
+    i = 0
+    for s in semesters: 
+        if s not in sem_marks_total_dict: 
+            sem_marks_total_dict[s] = [] 
+        sem_marks_total_dict[s].append(subject_total_marks[i]) 
+        i += 1 
+        
+    sem_gp_dict = {}
+    i = 0
+    for s in semesters: 
+        if s not in sem_gp_dict: 
+            sem_gp_dict[s] = [] 
+        sem_gp_dict[s].append(student_gps[i]) 
+        i += 1 
+
+    sem_credit_dict = {}
+    i = 0
+    for s in semesters: 
+        if s not in sem_credit_dict: 
+            sem_credit_dict[s] = [] 
+        sem_credit_dict[s].append(subject_credits[i]) 
+        i += 1 
+
+    semesters_name = list(sem_marks_obtained_dict.keys())
+    sum = 0
+    sum_array = []
+    for val in sem_marks_obtained_dict: 
+        for mark in sem_marks_obtained_dict[val]: 
+            sum +=int(mark) 
+        sum_array.append(sum) 
+    
+    marks_sum = sum_array
+
+    print('student_marks ',student_marks)
+    print('student_gps ',student_gps)
+    print('subject_codes ',subject_codes)
+    print('subject_total_marks ',subject_total_marks)
+    print('semesters  ',semesters )
+    print('sem_marks_obtained_dict', sem_marks_obtained_dict)
+    print('sem_marks_total_dict', sem_marks_total_dict)
+    print('sem_gp_dict', sem_gp_dict)
+    print('sem_credit_dict', sem_credit_dict)
+
+    return {
+        "student_marks":student_marks,
+        'student_gps':student_gps,
+        'subject_codes':subject_codes,
+        'subject_names':subject_names,
+        'sem_marks_total_dict':sem_marks_total_dict,
+        'semesters':semesters,
+        'sem_marks_obtained_dict': sem_marks_obtained_dict,
+        'sem_gp_dict': sem_gp_dict,
+        'sem_credit_dict': sem_credit_dict
+    }
 
 
 
@@ -726,3 +1060,6 @@ def contactus_view(request):
         #     getRequest = request.method
         #     student_academic_add_result_table(request,'school/student_academics_add_result.html',Subjects )
         #     # return render(request,'school/student_academics_add_result.html',context)
+
+
+

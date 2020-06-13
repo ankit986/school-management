@@ -29,7 +29,7 @@ class TeacherUserForm(forms.ModelForm):
 class TeacherExtraForm(forms.ModelForm):
     class Meta:
         model=models.TeacherExtra
-        fields=['salary','mobile','status']
+        fields=['mobile','status']
 
 #for Attendance related form
 presence_choices=(('Present','Present'),('Absent','Absent'))

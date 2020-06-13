@@ -1,0 +1,68 @@
+{% extends 'school/studentbase.html' %}
+{% block content %}
+
+<head>
+
+  <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+  <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+  <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+
+  <style media="screen">
+    a:link {
+      text-decoration: none;
+    }
+
+    h6 {
+      text-align: center;
+    }
+
+    .row {
+      margin: 100px;
+    }
+    .table{
+      margin-top:50px
+    }
+
+    .btnSubmit {
+      border: none;
+      border-radius: 1.5rem;
+      padding: 1%;
+      width: 20%;
+      cursor: pointer;
+      background: #0062cc;
+      color: #fff;
+    }
+  </style>
+
+</head>
+<div class="container">
+  <table class="table table-striped">
+  <thead>
+    <tr>
+      <th scope="col">Semester</th>
+      <th scope="col">SPI</th>
+      <th scope="col">CPI</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for i,j in sem_wise_cpi_spi.items%}
+    <tr>
+      <th scope="row">{{i}}</th>
+      {% for a in j %}
+      <td>{{a}}</td>
+      {% endfor %}
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+ <div>
+
+   {% autoescape off %}
+        {{ plot_div }}
+      {% endautoescape %}
+  <div>
+
+</div>
+
+{% endblock content %}

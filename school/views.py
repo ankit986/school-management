@@ -6,6 +6,7 @@ from django.http import HttpResponseRedirect
 from django.contrib.auth.decorators import login_required,user_passes_test
 from plotly.offline import plot
 from plotly.graph_objs import Scatter, Layout
+import json
 
 def home_view(request):
     if request.user.is_authenticated:
@@ -614,33 +615,45 @@ def student_attendance_view(request):
 def student_academics_add_result(request):
     # Subjects = []
     # semester = None
-    semester = 2
+    studentdata=models.StudentExtra.objects.all().filter(status=True,user_id=request.user.id)
+    roll = studentdata[0].roll
     form = forms.SelectSemester()
     if(request.method == "POST"):
-
-        studentdata=models.StudentExtra.objects.all().filter(status=True,user_id=request.user.id)
-        roll = studentdata[0].roll
+        semester = request.POST.get('sem')[0]
         Subjects = models.Subject.objects.all().filter(semester = semester) 
-
         marks_list = request.POST.getlist('marks')
-        print('ml', marks_list)
+        print('semester', semester)
         gp_list = request.POST.getlist('gp')
         i = 0
         for subject in Subjects:
+
             print('roll =', roll, 'subject_code =', subject.subject_code, 'obtained_marks =', marks_list[i], 'obtained_gp =', gp_list[i])
             academics = models.Academics(roll = roll, subject_code = subject.subject_code, obtained_marks = marks_list[i], obtained_gp = gp_list[i])
             i += 1
 
             academics.save()
 
-    Subjects = models.Subject.objects.all().filter(semester = semester) 
+    Subjects = models.Subject.objects.all() 
+    subject_dict = {}
+    for subject in Subjects:
 
+        subject_code = subject.subject_code
+        semester = subject.semester
+        subject_name = subject.subject_name
+        total_marks = subject.subject_total_marks
+        total_credits = subject.total_credits
+        if semester not in subject_dict:
+            subject_dict[semester] = []
+        subject_dict[semester].append([semester,subject_code, subject_name, total_marks, total_credits])
+        
+    subject_details_json  = json.dumps(subject_dict)
 
     context={
-        
+        "subject_details_json":subject_details_json,
         "subjects":Subjects
     } 
-    print("CONTEXT ", context)
+    # print("CONTEXT ", context)
+
     return render(request,'school/student_academics_add_result.html',context)
    
 
